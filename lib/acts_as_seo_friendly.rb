@@ -8,14 +8,14 @@ module ActiveRecord
 
       module MigrationMethods
         def create_seo_friendly_column()
-          seo_column_name = read_inheritable_attribute(:seo_friendly_options)[:seo_friendly_id_field].to_s
-          seo_column_limit = read_inheritable_attribute(:seo_friendly_options)[:seo_friendly_id_limit].to_i
+          seo_column_name = self.seo_friendly_options[:seo_friendly_id_field].to_s
+          seo_column_limit = self.seo_friendly_options[:seo_friendly_id_limit].to_i
           self.connection.add_column table_name(), seo_column_name, :string, :null => true, :limit => seo_column_limit
           self.connection.add_index table_name(), seo_column_name, :unique => true
         end
         
         def drop_seo_friendly_column()
-          seo_column_name = read_inheritable_attribute(:seo_friendly_options)[:seo_friendly_id_field].to_s
+          seo_column_name = self.seo_friendly_options[:seo_friendly_id_field].to_s
           self.connection.remove_index table_name(), seo_column_name
           self.connection.remove_column table_name(), seo_column_name
         end
@@ -26,7 +26,8 @@ module ActiveRecord
         # Use find_by_seo_friendly_id
         def acts_as_seo_friendly(options = {})
           options = {:seo_friendly_id_field => :seo_friendly_id, :seo_friendly_id_limit => 50}.merge(options)
-          write_inheritable_attribute(:seo_friendly_options, options)
+          class_attribute :seo_friendly_options
+          self.seo_friendly_options = options if self.respond_to?(:seo_friendly_options)
           
           if options[:do_before_create]
             before_create :create_seo_friendly_id
@@ -35,7 +36,7 @@ module ActiveRecord
           else
             after_save :create_seo_friendly_id
           end
-          to_param_with(read_inheritable_attribute(:seo_friendly_options)[:seo_friendly_id_field])
+          to_param_with(:seo_friendly_options)
           
           if !self.included_modules.include?(ActiveRecord::Acts::SeoFriendly::InstanceMethods)
             include ActiveRecord::Acts::SeoFriendly::InstanceMethods
@@ -62,26 +63,26 @@ module ActiveRecord
         
         def create_seo_friendly_id
           ## return if there are errors
-          return if self.errors.length > 0
+          return if self.errors.size > 0
           
-          seo_id_field = self.class.read_inheritable_attribute(:seo_friendly_options)[:seo_friendly_id_field].to_s
+          seo_id_field = self.class.seo_friendly_options[:seo_friendly_id_field].to_s
           count_seo_id_field = "count_#{seo_id_field}"
           count_seo_id_field_N = "#{count_seo_id_field}_N"
                     
-          resource_id_field = self.class.read_inheritable_attribute(:seo_friendly_options)[:resource_id].to_s
+          resource_id_field = self.class.seo_friendly_options[:resource_id].to_s
           resource_id_value = self.send(resource_id_field) rescue nil
           
           return if resource_id_value.blank?
           
           seo_id_value = create_seo_friendly_str(resource_id_value)
-          seo_id_value = self.class.read_inheritable_attribute(:seo_friendly_options)[:use_if_empty] || "" if seo_id_value.blank?
+          seo_id_value = self.class.seo_friendly_options[:use_if_empty] || "" if seo_id_value.blank?
 
           return if (self[seo_id_field] =~ /^#{seo_id_value}$/) || (self[seo_id_field] =~ /^#{seo_id_value}\-\d+$/)
 
           self.class.transaction do
             unique_id = determine_unique_id(seo_id_field, count_seo_id_field, count_seo_id_field_N, seo_id_value)
             seo_field_value = "#{seo_id_value}" + (unique_id != nil ? "-#{unique_id}" : "")
-            seo_friendly_id_limit = self.class.read_inheritable_attribute(:seo_friendly_options)[:seo_friendly_id_limit].to_i
+            seo_friendly_id_limit = self.class.seo_friendly_options[:seo_friendly_id_limit].to_i
             
             if seo_field_value.size > seo_friendly_id_limit
               seo_id_value = create_seo_friendly_str(resource_id_value, INITITAL_SEO_UNIQUE_DIGITS + (seo_field_value.size - seo_friendly_id_limit))
@@ -101,7 +102,7 @@ module ActiveRecord
         
         
         def determine_unique_id(seo_id_field, count_seo_id_field, count_seo_id_field_N, seo_id_value)
-          conditions_proc = self.class.read_inheritable_attribute(:seo_friendly_options)[:conditions]
+          conditions_proc = self.class.seo_friendly_options[:conditions]
           conditions_option = execute_block(conditions_proc)
           conditions = (!conditions_option.blank? ? " AND #{self.class.send(:sanitize_sql, conditions_option)} " : "")
           
@@ -148,7 +149,7 @@ module ActiveRecord
           s.downcase!
           s.gsub!(/\ +/, '-')
           s.gsub!(/\-{2}/, '-')
-          limit = self.class.read_inheritable_attribute(:seo_friendly_options)[:seo_friendly_id_limit].to_i - digits
+          limit = self.class.seo_friendly_options[:seo_friendly_id_limit].to_i - digits
           # if we are trimming on a word, attempt to pretty it up and trim on a boundary (if available)
           if s.length > limit && (s[limit, 1] =~ /[^\-]{1}/) != nil && (last_boundary_index = s[0..(limit - 1)].rindex('-')) != nil
             limit = last_boundary_index
