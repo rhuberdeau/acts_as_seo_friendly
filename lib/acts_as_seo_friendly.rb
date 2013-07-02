@@ -176,4 +176,4 @@ module ActiveRecord
   end
 end
 
-ActiveRecord::Base.send(:include, ActiveRecord::Acts::SeoFriendly)
+#ActiveRecord::Base.send(:include, ActiveRecord::Acts::SeoFriendly)

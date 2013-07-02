@@ -1,9 +1,3 @@
-module ActsAsSeoFriendly #:nodoc:
-  module VERSION #:nodoc:
-    MAJOR = 1
-    MINOR = 1
-    TINY  = 1
-
-    STRING = [MAJOR, MINOR, TINY].join('.')
-  end
+module ActsAsSeoFriendly
+  VERSION = "2.0.0.alpha"
 end
