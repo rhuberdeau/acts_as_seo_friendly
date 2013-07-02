@@ -92,7 +92,11 @@ module ActiveRecord
               seo_field_value = self['id'] if seo_field_value.size > seo_friendly_id_limit # still doesn't fit..give up, store the id
             end
 
-            self.class.update_all("#{seo_id_field} = \'#{seo_field_value}\'", ["id = ?", self.id])
+            # DO WE NEED THIS?? GETTING DEPRECATION WARNINGS ON UPDATE ALL AND id SEEMS TO ALWAYS BE nil
+            if !self.id.nil?
+              self.class.update_all("#{seo_id_field} = \'#{seo_field_value}\'", ["id = ?", self.id])
+            end
+            
             # set it so that it can be used after this..
             self[seo_id_field] = seo_field_value
           end
