@@ -1,6 +1,6 @@
 = acts_as_seo_friendly
 
-http://revolutiononrails.blogspot.com/
+This is a fork of revolutionhealth-acts_as_seo_friendly gem. This fork maintains all original functionality and is purely an upgrade for compatibility with rails 4.
 
 == DESCRIPTION:
 
