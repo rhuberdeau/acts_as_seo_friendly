@@ -8,7 +8,7 @@ require "sprockets/railtie"
 # require "rails/test_unit/railtie"
 
 Bundler.require(*Rails.groups)
-require "foobar"
+require "acts_as_seo_friendly"
 
 module Dummy
   class Application < Rails::Application
