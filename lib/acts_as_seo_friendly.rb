@@ -36,7 +36,7 @@ module ActiveRecord
           else
             after_save :create_seo_friendly_id
           end
-          to_param_with(:seo_friendly_options)
+          to_param_with(self.seo_friendly_options[:seo_friendly_id_field])
           
           if !self.included_modules.include?(ActiveRecord::Acts::SeoFriendly::InstanceMethods)
             include ActiveRecord::Acts::SeoFriendly::InstanceMethods
